@@ -36,16 +36,16 @@ export default function LoginPage() {
         localStorage.setItem('user', JSON.stringify(response.data));
         
         // Redirect based on user role
-        const { role } = response.data;
+        const { role } = response.data.user;
         switch(role) {
           case 'admin':
-            navigate('/admin/dashboard');
+            navigate('/admin');
             break;
           case 'manager':
-            navigate('/manager/dashboard');
+            navigate('/employee');
             break;
           case 'employee':
-            navigate('/employee/dashboard');
+            navigate('/manager');
             break;
           default:
             // If role is not recognized, redirect to a default page
