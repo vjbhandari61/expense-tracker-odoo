@@ -30,14 +30,19 @@ export default function LoginPage() {
         password: formData.password
       });
       
+      console.log("Full login response:", response);
+      
       // Store the token and user data in localStorage
-      if (response.token && response.data) {
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.data));
+      if (response.data?.token && response.data?.user) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        // Get user role from the nested response
+        const userRole = response.data.user.role;
+        console.log("User role:", userRole);
         
         // Redirect based on user role
-        const { role } = response.data.user;
-        switch(role) {
+        switch(userRole) {
           case 'admin':
             navigate('/admin');
             break;
@@ -48,13 +53,15 @@ export default function LoginPage() {
             navigate('/employee');
             break;
           default:
-            // If role is not recognized, redirect to a default page
+            console.warn('Unknown role:', userRole);
             navigate('/');
         }
+      } else {
+        throw new Error('Invalid response format');
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError(error.response?.data?.message || 'Login failed. Please check your credentials.');
+      setError(error.response?.data?.message || error.message || 'Login failed. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }
