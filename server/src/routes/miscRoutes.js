@@ -1,3 +1,4 @@
+// routes/miscRoutes.js
 const express = require('express');
 const router = express.Router();
 const miscController = require('../controllers/miscController');

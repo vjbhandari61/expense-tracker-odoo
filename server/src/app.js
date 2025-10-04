@@ -8,7 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const approvalRoutes = require('./routes/approvalRoutes');
-const approvalRuleRoutes = require('./routes/approvalRuleRoutes');
+const approvalRuleRoutes = require('./routes/approvalRulesRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const miscRoutes = require('./routes/miscRoutes');
 
@@ -27,10 +27,12 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true
-}));
+// app.use(cors({
+//   origin: process.env.CLIENT_URL || 'http://localhost:3000',
+//   credentials: true
+// }));
+
+app.use(cors())
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));

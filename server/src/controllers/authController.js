@@ -1,120 +1,124 @@
-const User = require('../models/User');
-const asyncHandler = require('../utils/asyncHandler');
-const ErrorResponse = require('../utils/errorResponse');
+// controllers/authController.js
+const authService = require('../services/authService');
+const { generateToken } = require('../utils/jwt');
 
-exports.register = asyncHandler(async (req, res, next) => {
-  const { firstName, lastName, email, password, role, department } = req.body;
+exports.signup = async (req, res) => {
+  try {
+    const { name, email, password, country, currency, companyName } = req.body;
+    
+    const result = await authService.signup({
+      name,
+      email,
+      password,
+      country,
+      currency,
+      companyName
+    });
 
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    return next(new ErrorResponse('User already exists', 400));
+    // Generate JWT token
+    const token = generateToken(result.user._id);
+
+    res.status(201).json({
+      success: true,
+      message: 'Company and admin user created successfully',
+      data: {
+        user: {
+          id: result.user._id,
+          name: result.user.name,
+          email: result.user.email,
+          role: result.user.role
+        },
+        company: result.company,
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
   }
+};
 
-  const user = await User.create({
-    firstName,
-    lastName,
-    email,
-    password,
-    role: role || 'employee',
-    department
-  });
-
-  const token = user.getSignedJwtToken();
-
-  res.status(201).json({
-    success: true,
-    token,
-    user: {
-      id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      role: user.role,
-      department: user.department
-    }
-  });
-});
-
-exports.login = asyncHandler(async (req, res, next) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return next(new ErrorResponse('Please provide email and password', 400));
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    const user = await authService.login(email, password);
+    
+    // Generate JWT token
+    const token = generateToken(user._id);
+    
+    res.json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          company: user.company
+        },
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(401).json({
+      success: false,
+      message: error.message
+    });
   }
+};
 
-  const user = await User.findOne({ email }).select('+password');
-
-  if (!user || !(await user.comparePassword(password))) {
-    return next(new ErrorResponse('Invalid credentials', 401));
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    const result = await authService.forgotPassword(email);
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
   }
+};
 
-  if (!user.isActive) {
-    return next(new ErrorResponse('Account is deactivated', 401));
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    
+    const result = await authService.resetPassword(token, newPassword);
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
   }
+};
 
-  user.lastLogin = new Date();
-  await user.save();
-
-  const token = user.getSignedJwtToken();
-
-  res.status(200).json({
-    success: true,
-    token,
-    user: {
-      id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      role: user.role,
-      department: user.department
-    }
-  });
-});
-
-exports.getMe = asyncHandler(async (req, res, next) => {
-  const user = await User.findById(req.user.id);
-
-  res.status(200).json({
-    success: true,
-    data: user
-  });
-});
-
-exports.updatePassword = asyncHandler(async (req, res, next) => {
-  const user = await User.findById(req.user.id).select('+password');
-
-  if (!(await user.comparePassword(req.body.currentPassword))) {
-    return next(new ErrorResponse('Password is incorrect', 401));
+exports.validateResetToken = async (req, res) => {
+  try {
+    const { token } = req.body;
+    
+    const result = await authService.validateResetToken(token);
+    
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
   }
-
-  user.password = req.body.newPassword;
-  await user.save();
-
-  const token = user.getSignedJwtToken();
-
-  res.status(200).json({
-    success: true,
-    token,
-    message: 'Password updated successfully'
-  });
-});
-
-exports.forgotPassword = asyncHandler(async (req, res, next) => {
-  const user = await User.findOne({ email: req.body.email });
-
-  if (!user) {
-    return next(new ErrorResponse('No user with that email', 404));
-  }
-  
-  res.status(200).json({
-    success: true,
-    message: 'Password reset email sent (implementation pending)'
-  });
-});
-
-exports.resetPassword = asyncHandler(async (req, res, next) => {
-  res.status(200).json({
-    success: true,
-    message: 'Password reset successful (implementation pending)'
-  });
-});
+};
