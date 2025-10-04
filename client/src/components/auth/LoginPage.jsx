@@ -30,11 +30,27 @@ export default function LoginPage() {
         password: formData.password
       });
       
-      // Store the token in localStorage or context/state management
-      if (response.token) {
+      // Store the token and user data in localStorage
+      if (response.token && response.data) {
         localStorage.setItem('token', response.token);
-        // Redirect to dashboard or home page after successful login
-        navigate('/dashboard');
+        localStorage.setItem('user', JSON.stringify(response.data));
+        
+        // Redirect based on user role
+        const { role } = response.data;
+        switch(role) {
+          case 'admin':
+            navigate('/admin/dashboard');
+            break;
+          case 'manager':
+            navigate('/manager/dashboard');
+            break;
+          case 'employee':
+            navigate('/employee/dashboard');
+            break;
+          default:
+            // If role is not recognized, redirect to a default page
+            navigate('/');
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
