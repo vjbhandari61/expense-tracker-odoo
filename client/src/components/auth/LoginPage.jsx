@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginAdmin } from '../../util/requester';
+import { loginUser } from '../../util/requester';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      const response = await loginAdmin({
+      const response = await loginUser({
         email: formData.email,
         password: formData.password
       });
@@ -42,10 +42,10 @@ export default function LoginPage() {
             navigate('/admin');
             break;
           case 'manager':
-            navigate('/employee');
+            navigate('/manager');
             break;
           case 'employee':
-            navigate('/manager');
+            navigate('/employee');
             break;
           default:
             // If role is not recognized, redirect to a default page
