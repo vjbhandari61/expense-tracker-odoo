@@ -20,3 +20,20 @@ export const signupAdmin = async (adminData) => {
     throw error;
   }
 };
+
+export const loginAdmin = async (credentials) => {
+  try {
+    const response = await api.post("/auth/login", credentials, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    console.log("Login success:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Login failed:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+
